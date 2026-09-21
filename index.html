@@ -26,7 +26,7 @@
         }
         label {
             font-weight: bold;
-            margin-top: 10px;
+            margin-top: 15px;
             display: block;
         }
         textarea, select {
@@ -65,6 +65,36 @@
             border-radius: 5px;
             margin-top: 5px;
         }
+        
+        /* Cards display style */
+        .cards-container {
+            margin-top: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background: #fdfdfd;
+        }
+        .store-card {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-left: 5px solid #007bff;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .store-card b {
+            color: #075e54;
+            font-size: 15px;
+        }
+        .store-detail {
+            font-size: 13px;
+            color: #555;
+            margin-top: 3px;
+        }
+        
         .dashboard {
             display: flex;
             gap: 10px;
@@ -75,19 +105,19 @@
             border: 1px solid #ddd;
             border-radius: 5px;
             padding: 10px;
-            max-height: 250px;
+            max-height: 200px;
             overflow-y: auto;
             background: #fafafa;
         }
         .list-box h3 {
             margin-top: 0;
-            font-size: 15px;
+            font-size: 14px;
             border-bottom: 1px solid #eee;
             padding-bottom: 5px;
         }
         .item {
-            font-size: 13px;
-            margin-bottom: 8px;
+            font-size: 12px;
+            margin-bottom: 6px;
             padding: 5px;
             background: #fff;
             border-radius: 3px;
@@ -115,11 +145,13 @@
     <!-- Google Sheet Sync Button -->
     <button class="btn-sync" onclick="fetchFromSheet()">Google Sheet-ൽ നിന്ന് ഡാറ്റ കൊണ്ടുവരിക</button>
 
-    <label for="dataInput">കടകളുടെ വിവരങ്ങൾ (കടയുടെ പേര്, സ്ഥലം, ഫോൺ നമ്പർ):</label>
-    <textarea id="dataInput" rows="6" placeholder="ഡാറ്റ ഇവിടെ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ മുകളിലെ ബട്ടൺ അമർത്തുക..."></textarea>
+    <label>കടകളുടെ വിവരങ്ങൾ:</label>
+    <div id="cardsContainer" class="cards-container">
+        <p style="text-align: center; color: #888; font-size: 13px;">ഡാറ്റ ലോഡ് ചെയ്യാൻ മുകളിലെ ബട്ടൺ അമർത്തുക...</p>
+    </div>
 
     <label for="message">സന്ദേശം (Message):</label>
-    <textarea id="message" rows="3" placeholder="നിങ്ങളുടെ സന്ദേശം ഇവിടെ നൽകുക..."></textarea>
+    <textarea id="message" rows="3" placeholder="നിങ്ങൾക്ക് അയക്കേണ്ട മെസ്സേജ് മാത്രം ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
 
     <label>ഫോട്ടോ / വീഡിയോ അയക്കാൻ (Optional):</label>
     <div class="file-input-box">
@@ -154,21 +186,19 @@
     const CSV_URL = "https://docs.google.com/spreadsheets/d/1MZFEXa8rNwYPGA5ptfcKTEoHWCE-uVVpL0PvE2CpmMA/gviz/tq?tqx=out:csv";
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuZInAVz_ojoNkuhJyq1bsn32jRX6iCCS9Fl_JKgIWEklWhjIN0dDvdEyWHykdcG/exec";
 
+    let fetchedStores = [];
+
     function fetchFromSheet() {
         document.getElementById("statusTracker").innerText = "Google Sheet-ൽ നിന്ന് ഡാറ്റ എടുക്കുന്നു...";
 
-        // Direct CSV Fetch വഴി ആദ്യം ശ്രമിക്കുന്നു
         fetch(CSV_URL)
             .then(res => {
                 if (!res.ok) throw new Error("CSV Fetch failed");
                 return res.text();
             })
-            .then(csvText => {
-                parseCSVAndFill(csvText);
-            })
+            .then(csvText => parseCSVAndFill(csvText))
             .catch(err => {
-                console.log("CSV Direct fetch failed, trying Apps Script API...", err);
-                // പരാജയപ്പെട്ടാൽ Apps Script API വഴി ശ്രമിക്കുന്നു
+                console.log("CSV Fetch failed, trying Apps Script...", err);
                 fetch(APPS_SCRIPT_URL)
                     .then(res => res.json())
                     .then(data => parseJSONAndFill(data))
@@ -182,13 +212,13 @@
 
     function parseCSVAndFill(csvText) {
         let lines = csvText.split('\n');
-        let formattedText = "";
+        fetchedStores = [];
 
         for (let i = 1; i < lines.length; i++) {
             let row = lines[i].split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
             if (row.length < 1 || !row.join('')) continue;
 
-            let name = row[0] || "";
+            let name = row[0] || "കട";
             let type = row[1] || "";
             let place = row[2] || "";
             let phone = row[4] || "";
@@ -203,22 +233,20 @@
             }
 
             if (name || phone) {
-                let combinedPlace = place ? (type ? type + ' - ' + place : place) : type;
-                formattedText += `${name}, ${combinedPlace}, ${phone}\n`;
+                fetchedStores.push({ name, type, place, phone });
             }
         }
 
-        document.getElementById("dataInput").value = formattedText;
-        document.getElementById("statusTracker").innerText = "ഡാറ്റ വിജയകരമായി ഡൗൺലോഡ് ചെയ്തു!";
+        renderCards();
     }
 
     function parseJSONAndFill(data) {
-        let formattedText = "";
+        fetchedStores = [];
         for (let i = 1; i < data.length; i++) {
             let row = data[i];
             if (!row || row.length === 0) continue;
 
-            let name = row[0] ? String(row[0]).trim() : "";
+            let name = row[0] ? String(row[0]).trim() : "കട";
             let type = row[1] ? String(row[1]).trim() : "";
             let place = row[2] ? String(row[2]).trim() : "";
             let phone = row[4] ? String(row[4]).trim() : "";
@@ -233,13 +261,29 @@
             }
 
             if (name || phone) {
-                let combinedPlace = place ? (type ? type + ' - ' + place : place) : type;
-                formattedText += `${name}, ${combinedPlace}, ${phone}\n`;
+                fetchedStores.push({ name, type, place, phone });
             }
         }
 
-        document.getElementById("dataInput").value = formattedText;
-        document.getElementById("statusTracker").innerText = "ഡാറ്റ വിജയകരമായി ഡൗൺലോഡ് ചെയ്തു!";
+        renderCards();
+    }
+
+    function renderCards() {
+        const container = document.getElementById("cardsContainer");
+        if (fetchedStores.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: red;">കടകളുടെ വിവരങ്ങൾ ഒന്നും ലഭിച്ചില്ല.</p>';
+            return;
+        }
+
+        container.innerHTML = fetchedStores.map(store => `
+            <div class="store-card">
+                <b>${store.name}</b> ${store.type ? '<span style="font-size:12px; color:#666;">(' + store.type + ')</span>' : ''}
+                <div class="store-detail">📍 സ്ഥലം: ${store.place || 'നൽകിയിട്ടില്ല'}</div>
+                <div class="store-detail">📞 ഫോൺ: ${store.phone ? store.phone : '<span style="color:red;">നമ്പർ ലഭ്യമല്ല</span>'}</div>
+            </div>
+        `).join('');
+
+        document.getElementById("statusTracker").innerText = `ആകെ ${fetchedStores.length} കടകളുടെ വിവരങ്ങൾ ലോഡ് ചെയ്തു!`;
     }
 
     let queue = [];
@@ -247,47 +291,34 @@
     let timer = null;
 
     function startProcess() {
-        const rawData = document.getElementById("dataInput").value.trim();
         const baseMessage = document.getElementById("message").value.trim();
         const intervalSec = parseInt(document.getElementById("interval").value) * 1000;
 
-        if (!rawData || !baseMessage) {
-            alert("ദയവായി വിവരങ്ങളും സന്ദേശവും നൽകുക!");
+        if (fetchedStores.length === 0) {
+            alert("ആദ്യം Google Sheet-ൽ നിന്ന് ഡാറ്റ കൊണ്ടുവരിക!");
             return;
         }
 
-        const lines = rawData.split('\n');
+        if (!baseMessage) {
+            alert("ദയവായി അയക്കേണ്ട സന്ദേശം ടൈപ്പ് ചെയ്യുക!");
+            return;
+        }
+
         queue = [];
         sentItems = [];
 
-        lines.forEach(line => {
-            const parts = line.split(',');
-            let name = "Customer";
-            let place = "";
-            let phone = "";
-
-            parts.forEach(part => {
-                let cleanPart = part.trim();
-                let nums = cleanPart.replace(/[^0-9]/g, '');
-                if (nums.length >= 10 && !phone) {
-                    phone = nums;
-                } else if (!name || name === "Customer") {
-                    name = cleanPart;
-                } else {
-                    place += (place ? " " : "") + cleanPart;
+        fetchedStores.forEach(store => {
+            let cleanPhone = store.phone.replace(/[^0-9]/g, '');
+            if (cleanPhone.length >= 10) {
+                if (!cleanPhone.startsWith("91") && cleanPhone.length === 10) {
+                    cleanPhone = "91" + cleanPhone;
                 }
-            });
-
-            if (phone) {
-                if (!phone.startsWith("91") && phone.length === 10) {
-                    phone = "91" + phone;
-                }
-                queue.push({ name, place, phone });
+                queue.push({ name: store.name, place: store.place, phone: cleanPhone });
             }
         });
 
         if (queue.length === 0) {
-            alert("ശ്രദ്ധിക്കുക: ഫോൺ നമ്പർ ഉള്ള എൻട്രികൾ ഒന്നും കണ്ടെത്തിയില്ല!");
+            alert("ശ്രദ്ധിക്കുക: ഫോൺ നമ്പർ ഉള്ള കടകൾ ഒന്നും കണ്ടെത്തിയില്ല! ഷീറ്റിൽ ഫോൺ നമ്പറുകൾ ടൈപ്പ് ചെയ്ത ശേഷം വീണ്ടും ശ്രമിക്കുക.");
             return;
         }
 
@@ -308,13 +339,8 @@
         const currentItem = queue.shift();
         sentItems.push(currentItem);
 
-        let customizedMsg = `ഹലോ ${currentItem.name}`;
-        if (currentItem.place) {
-            customizedMsg += ` (${currentItem.place})`;
-        }
-        customizedMsg += `,\n\n${baseMessage}`;
-
-        const url = `https://wa.me/${currentItem.phone}?text=${encodeURIComponent(customizedMsg)}`;
+        // കൃത്യമായി നിങ്ങൾ ടൈപ്പ് ചെയ്യുന്ന മെസ്സേജ് മാത്രം അയക്കുന്നു
+        const url = `https://wa.me/${currentItem.phone}?text=${encodeURIComponent(baseMessage)}`;
 
         window.open(url, '_blank');
 
@@ -327,11 +353,11 @@
         document.getElementById("sentCount").innerText = sentItems.length;
 
         document.getElementById("pendingList").innerHTML = queue.map(item => 
-            `<div class="item pending"><b>${item.name}</b> ${item.place ? '(' + item.place + ')' : ''}<br>${item.phone}</div>`
+            `<div class="item pending"><b>${item.name}</b><br>${item.phone}</div>`
         ).join('');
 
         document.getElementById("sentList").innerHTML = sentItems.map(item => 
-            `<div class="item sent"><b>${item.name}</b> ${item.place ? '(' + item.place + ')' : ''}<br>${item.phone}</div>`
+            `<div class="item sent"><b>${item.name}</b><br>${item.phone}</div>`
         ).join('');
     }
 </script>
