@@ -19,16 +19,8 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        h2 {
-            text-align: center;
-            color: #075e54;
-            margin-bottom: 20px;
-        }
-        label {
-            font-weight: bold;
-            margin-top: 15px;
-            display: block;
-        }
+        h2 { text-align: center; color: #075e54; margin-bottom: 20px; }
+        label { font-weight: bold; margin-top: 15px; display: block; }
         textarea, select {
             width: 100%;
             padding: 10px;
@@ -49,27 +41,18 @@
             margin-top: 10px;
             font-weight: bold;
         }
-        .btn-sync {
-            background-color: #007bff;
-            margin-bottom: 15px;
-        }
-        .btn-sync:hover {
-            background-color: #0056b3;
-        }
-        button:hover {
+        .btn-sync { background-color: #007bff; margin-bottom: 15px; }
+        .btn-send-next {
             background-color: #128c7e;
+            font-size: 18px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .file-input-box {
-            background: #e9ecef;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 5px;
-        }
-        
-        /* Cards display style */
         .cards-container {
             margin-top: 10px;
-            max-height: 250px;
+            max-height: 200px;
             overflow-y: auto;
             border: 1px solid #ccc;
             padding: 10px;
@@ -80,61 +63,24 @@
             background: #ffffff;
             border: 1px solid #e0e0e0;
             border-left: 5px solid #007bff;
-            padding: 10px 12px;
+            padding: 10px;
             margin-bottom: 8px;
             border-radius: 5px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        .store-card b {
-            color: #075e54;
-            font-size: 15px;
-        }
-        .store-detail {
-            font-size: 13px;
-            color: #555;
-            margin-top: 3px;
-        }
-        
-        .dashboard {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
+        .dashboard { display: flex; gap: 10px; margin-top: 20px; }
         .list-box {
             flex: 1;
             border: 1px solid #ddd;
             border-radius: 5px;
             padding: 10px;
-            max-height: 200px;
+            max-height: 180px;
             overflow-y: auto;
             background: #fafafa;
         }
-        .list-box h3 {
-            margin-top: 0;
-            font-size: 14px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-        }
-        .item {
-            font-size: 12px;
-            margin-bottom: 6px;
-            padding: 5px;
-            background: #fff;
-            border-radius: 3px;
-            border-left: 3px solid #ccc;
-        }
-        .item.sent {
-            border-left-color: #25d366;
-        }
-        .item.pending {
-            border-left-color: #ff9800;
-        }
-        .status-tracker {
-            text-align: center;
-            font-weight: bold;
-            margin-top: 15px;
-            color: #075e54;
-        }
+        .item { font-size: 12px; margin-bottom: 6px; padding: 5px; background: #fff; border-radius: 3px; border-left: 3px solid #ccc; }
+        .item.sent { border-left-color: #25d366; }
+        .item.pending { border-left-color: #ff9800; }
+        .status-tracker { text-align: center; font-weight: bold; margin-top: 15px; color: #075e54; }
     </style>
 </head>
 <body>
@@ -142,7 +88,6 @@
 <div class="container">
     <h2>WhatsApp Bulk Sender</h2>
 
-    <!-- Google Sheet Sync Button -->
     <button class="btn-sync" onclick="fetchFromSheet()">Google Sheet-ൽ നിന്ന് ഡാറ്റ കൊണ്ടുവരിക</button>
 
     <label>കടകളുടെ വിവരങ്ങൾ:</label>
@@ -151,22 +96,12 @@
     </div>
 
     <label for="message">സന്ദേശം (Message):</label>
-    <textarea id="message" rows="3" placeholder="നിങ്ങൾക്ക് അയക്കേണ്ട മെസ്സേജ് മാത്രം ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
+    <textarea id="message" rows="3" placeholder="അയക്കേണ്ട സന്ദേശം മാത്രം ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
 
-    <label>ഫോട്ടോ / വീഡിയോ അയക്കാൻ (Optional):</label>
-    <div class="file-input-box">
-        <input type="file" id="mediaFile" accept="image/*,video/*">
-        <p style="font-size: 11px; color: #666; margin: 5px 0 0 0;">ശ്രദ്ധിക്കുക: വാട്ട്‌സ്ആപ്പ് ഓപ്പൺ ആയി വരുമ്പോൾ അറ്റാച്ച്‌മെന്റ് വഴി നിങ്ങൾ സെലക്ട് ചെയ്ത ഫോട്ടോ/വീഡിയോ അയക്കുക.</p>
-    </div>
+    <button id="startBtn" onclick="startProcess()">Start Bulk Sending</button>
 
-    <label for="interval">ഇടവേള (Interval):</label>
-    <select id="interval">
-        <option value="60">1 മിനിറ്റ് (60 സെക്കൻഡ്)</option>
-        <option value="30">30 സെക്കൻഡ്</option>
-        <option value="120">2 മിനിറ്റ്</option>
-    </select>
-
-    <button onclick="startProcess()">Start Sending</button>
+    <!-- Send Next Action Button -->
+    <button id="sendNextBtn" class="btn-send-next" onclick="sendToCurrent()"></button>
 
     <div id="statusTracker" class="status-tracker"></div>
 
@@ -184,29 +119,19 @@
 
 <script>
     const CSV_URL = "https://docs.google.com/spreadsheets/d/1MZFEXa8rNwYPGA5ptfcKTEoHWCE-uVVpL0PvE2CpmMA/gviz/tq?tqx=out:csv";
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuZInAVz_ojoNkuhJyq1bsn32jRX6iCCS9Fl_JKgIWEklWhjIN0dDvdEyWHykdcG/exec";
-
     let fetchedStores = [];
+    let queue = [];
+    let sentItems = [];
+    let currentStore = null;
 
     function fetchFromSheet() {
         document.getElementById("statusTracker").innerText = "Google Sheet-ൽ നിന്ന് ഡാറ്റ എടുക്കുന്നു...";
-
         fetch(CSV_URL)
-            .then(res => {
-                if (!res.ok) throw new Error("CSV Fetch failed");
-                return res.text();
-            })
+            .then(res => res.text())
             .then(csvText => parseCSVAndFill(csvText))
             .catch(err => {
-                console.log("CSV Fetch failed, trying Apps Script...", err);
-                fetch(APPS_SCRIPT_URL)
-                    .then(res => res.json())
-                    .then(data => parseJSONAndFill(data))
-                    .catch(e => {
-                        console.error(e);
-                        alert("ഡാറ്റ ലോഡ് ചെയ്യുന്നതിൽ പിശക് സംഭവിച്ചു! Google Sheet Share settings 'Anyone with link' എന്ന് മാറ്റിയിട്ടുണ്ടെന്ന് ഉറപ്പുവരുത്തുക.");
-                        document.getElementById("statusTracker").innerText = "";
-                    });
+                alert("ഡാറ്റ ലോഡ് ചെയ്യുന്നതിൽ പിശക് സംഭവിച്ചു!");
+                document.getElementById("statusTracker").innerText = "";
             });
     }
 
@@ -226,43 +151,11 @@
             if (!phone) {
                 row.forEach(cell => {
                     let cleanNum = cell.replace(/[^0-9]/g, '');
-                    if (cleanNum.length >= 10 && !phone) {
-                        phone = cleanNum;
-                    }
+                    if (cleanNum.length >= 10 && !phone) phone = cleanNum;
                 });
             }
 
-            if (name || phone) {
-                fetchedStores.push({ name, type, place, phone });
-            }
-        }
-
-        renderCards();
-    }
-
-    function parseJSONAndFill(data) {
-        fetchedStores = [];
-        for (let i = 1; i < data.length; i++) {
-            let row = data[i];
-            if (!row || row.length === 0) continue;
-
-            let name = row[0] ? String(row[0]).trim() : "കട";
-            let type = row[1] ? String(row[1]).trim() : "";
-            let place = row[2] ? String(row[2]).trim() : "";
-            let phone = row[4] ? String(row[4]).trim() : "";
-
-            if (!phone) {
-                row.forEach(cell => {
-                    let cleanNum = String(cell).replace(/[^0-9]/g, '');
-                    if (cleanNum.length >= 10 && !phone) {
-                        phone = cleanNum;
-                    }
-                });
-            }
-
-            if (name || phone) {
-                fetchedStores.push({ name, type, place, phone });
-            }
+            if (name || phone) fetchedStores.push({ name, type, place, phone });
         }
 
         renderCards();
@@ -271,34 +164,27 @@
     function renderCards() {
         const container = document.getElementById("cardsContainer");
         if (fetchedStores.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: red;">കടകളുടെ വിവരങ്ങൾ ഒന്നും ലഭിച്ചില്ല.</p>';
+            container.innerHTML = '<p style="text-align: center; color: red;">ഡാറ്റ ലഭിച്ചില്ല.</p>';
             return;
         }
 
         container.innerHTML = fetchedStores.map(store => `
             <div class="store-card">
-                <b>${store.name}</b> ${store.type ? '<span style="font-size:12px; color:#666;">(' + store.type + ')</span>' : ''}
-                <div class="store-detail">📍 സ്ഥലം: ${store.place || 'നൽകിയിട്ടില്ല'}</div>
-                <div class="store-detail">📞 ഫോൺ: ${store.phone ? store.phone : '<span style="color:red;">നമ്പർ ലഭ്യമല്ല</span>'}</div>
+                <b>${store.name}</b> ${store.type ? '(' + store.type + ')' : ''}<br>
+                <small>📍 ${store.place || 'N/A'} | 📞 ${store.phone || 'No Number'}</small>
             </div>
         `).join('');
 
         document.getElementById("statusTracker").innerText = `ആകെ ${fetchedStores.length} കടകളുടെ വിവരങ്ങൾ ലോഡ് ചെയ്തു!`;
     }
 
-    let queue = [];
-    let sentItems = [];
-    let timer = null;
-
     function startProcess() {
         const baseMessage = document.getElementById("message").value.trim();
-        const intervalSec = parseInt(document.getElementById("interval").value) * 1000;
 
         if (fetchedStores.length === 0) {
             alert("ആദ്യം Google Sheet-ൽ നിന്ന് ഡാറ്റ കൊണ്ടുവരിക!");
             return;
         }
-
         if (!baseMessage) {
             alert("ദയവായി അയക്കേണ്ട സന്ദേശം ടൈപ്പ് ചെയ്യുക!");
             return;
@@ -310,42 +196,51 @@
         fetchedStores.forEach(store => {
             let cleanPhone = store.phone.replace(/[^0-9]/g, '');
             if (cleanPhone.length >= 10) {
-                if (!cleanPhone.startsWith("91") && cleanPhone.length === 10) {
-                    cleanPhone = "91" + cleanPhone;
-                }
+                if (!cleanPhone.startsWith("91") && cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
                 queue.push({ name: store.name, place: store.place, phone: cleanPhone });
             }
         });
 
         if (queue.length === 0) {
-            alert("ശ്രദ്ധിക്കുക: ഫോൺ നമ്പർ ഉള്ള കടകൾ ഒന്നും കണ്ടെത്തിയില്ല! ഷീറ്റിൽ ഫോൺ നമ്പറുകൾ ടൈപ്പ് ചെയ്ത ശേഷം വീണ്ടും ശ്രമിക്കുക.");
+            alert("ഫോൺ നമ്പർ ഉള്ള കടകൾ ഒന്നും കണ്ടെത്തിയില്ല!");
             return;
         }
 
+        document.getElementById("startBtn").style.display = "none";
         updateDashboard();
-        
-        if (timer) clearInterval(timer);
-        sendNext(baseMessage, intervalSec);
-        timer = setInterval(() => sendNext(baseMessage, intervalSec), intervalSec);
+        prepareNext();
     }
 
-    function sendNext(baseMessage, intervalSec) {
+    function prepareNext() {
+        const sendNextBtn = document.getElementById("sendNextBtn");
+
         if (queue.length === 0) {
-            document.getElementById("statusTracker").innerText = "എല്ലാ സന്ദേശങ്ങളും അയച്ചു കഴിഞ്ഞു!";
-            clearInterval(timer);
+            sendNextBtn.style.display = "none";
+            document.getElementById("statusTracker").innerText = "🎉 എല്ലാ സന്ദേശങ്ങളും അയച്ചു കഴിഞ്ഞു!";
+            document.getElementById("startBtn").style.display = "block";
             return;
         }
 
-        const currentItem = queue.shift();
-        sentItems.push(currentItem);
+        currentStore = queue.shift();
+        sendNextBtn.innerText = `📲 Send Message to: ${currentStore.name}`;
+        sendNextBtn.style.display = "block";
+        document.getElementById("statusTracker").innerText = `അടുത്തത്: ${currentStore.name}`;
+    }
 
-        // നേരിട്ട് വാട്ട്‌സ്ആപ്പ് ആപ്പ് ഓപ്പൺ ചെയ്യാനുള്ള ലിങ്ക്
-        const url = `whatsapp://send?phone=${currentItem.phone}&text=${encodeURIComponent(baseMessage)}`;
+    function sendToCurrent() {
+        if (!currentStore) return;
 
-        window.open(url, '_blank');
+        const baseMessage = document.getElementById("message").value.trim();
+        const url = `whatsapp://send?phone=${currentStore.phone}&text=${encodeURIComponent(baseMessage)}`;
 
+        window.location.href = url;
+
+        sentItems.push(currentStore);
         updateDashboard();
-        document.getElementById("statusTracker").innerText = `അടുത്ത സന്ദേശം ${intervalSec/1000} സെക്കൻഡിൽ അയക്കും...`;
+
+        setTimeout(() => {
+            prepareNext();
+        }, 1000);
     }
 
     function updateDashboard() {
