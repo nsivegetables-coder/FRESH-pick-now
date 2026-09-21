@@ -20,7 +20,7 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         h2 { text-align: center; color: #075e54; margin-bottom: 20px; }
-        label { font-weight: bold; margin-top: 15px; display: block; }
+        label { font-weight: bold; margin-top: 15px; display: block; color: #333; }
         textarea {
             width: 100%;
             padding: 10px;
@@ -46,7 +46,7 @@
         
         .cards-container {
             margin-top: 15px;
-            max-height: 450px;
+            max-height: 480px;
             overflow-y: auto;
             border: 1px solid #ddd;
             padding: 10px;
@@ -58,7 +58,7 @@
             border: 1px solid #e0e0e0;
             border-left: 5px solid #25d366;
             padding: 12px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             border-radius: 6px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             display: flex;
@@ -74,12 +74,12 @@
             flex: 1;
         }
         .store-title {
-            font-size: 15px;
+            font-size: 16px;
             color: #075e54;
             font-weight: bold;
         }
         .store-detail {
-            font-size: 12px;
+            font-size: 13px;
             color: #555;
             margin-top: 3px;
         }
@@ -87,8 +87,8 @@
             background-color: #25d366;
             color: white;
             border: none;
-            padding: 10px 14px;
-            font-size: 13px;
+            padding: 10px 16px;
+            font-size: 14px;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
@@ -105,14 +105,15 @@
 <div class="container">
     <h2>WhatsApp Bulk Sender</h2>
 
+    <!-- Google Sheet Sync Button -->
     <button class="btn-sync" onclick="fetchFromSheet()">Google Sheet-ൽ നിന്ന് ഡാറ്റ കൊണ്ടുവരിക</button>
 
     <label for="message">സന്ദേശം (Message):</label>
-    <textarea id="message" rows="3" placeholder="അയക്കേണ്ട സന്ദേശം ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
+    <textarea id="message" rows="3" placeholder="കടക്കാർക്ക് അയക്കേണ്ട മെസ്സേജ് ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
 
     <div id="statusTracker" class="status-tracker"></div>
 
-    <label>കടകളുടെ ലിസ്റ്റ്:</label>
+    <label>കടകളുടെ വിവരങ്ങൾ:</label>
     <div id="cardsContainer" class="cards-container">
         <p style="text-align: center; color: #888; font-size: 13px;">ഡാറ്റ ലോഡ് ചെയ്യാൻ മുകളിലെ ബട്ടൺ അമർത്തുക...</p>
     </div>
@@ -175,14 +176,14 @@
             return `
                 <div class="store-card ${store.isSent ? 'sent' : ''}" id="card-${index}">
                     <div class="store-info">
-                        <div class="store-title">${store.name} ${store.type ? '<span style="font-size:11px; color:#666;">(' + store.type + ')</span>' : ''}</div>
-                        <div class="store-detail">📍 ${store.place || 'സ്ഥലം നൽകിയിട്ടില്ല'}</div>
-                        <div class="store-detail">📞 ${cleanPhone ? cleanPhone : '<span style="color:red;">ഫോൺ നമ്പർ ഇല്ല</span>'}</div>
+                        <div class="store-title">${store.name} ${store.type ? '<span style="font-size:12px; color:#666;">(' + store.type + ')</span>' : ''}</div>
+                        <div class="store-detail">📍 സ്ഥലം: ${store.place || 'നൽകിയിട്ടില്ല'}</div>
+                        <div class="store-detail">📞 ഫോൺ: ${cleanPhone ? cleanPhone : '<span style="color:red;">നമ്പർ ലഭ്യമല്ല</span>'}</div>
                     </div>
                     <div>
                         ${cleanPhone ? 
                             `<button class="btn-wa-send ${store.isSent ? 'sent-btn' : ''}" id="btn-${index}" onclick="sendMessage(${index}, '${cleanPhone}')">
-                                ${store.isSent ? '✔ Sent' : '💬 Send'}
+                                ${store.isSent ? '✔ Sent' : '💬 Share'}
                             </button>` : 
                             `<button class="btn-wa-send" style="background:#ccc; cursor:not-allowed;" disabled>No Number</button>`
                         }
@@ -191,7 +192,7 @@
             `;
         }).join('');
 
-        document.getElementById("statusTracker").innerText = `ആകെ ${fetchedStores.length} കടകൾ ലോഡ് ചെയ്തു.`;
+        document.getElementById("statusTracker").innerText = `ആകെ ${fetchedStores.length} കടകൾ കാണിക്കുന്നു.`;
     }
 
     function sendMessage(index, phone) {
