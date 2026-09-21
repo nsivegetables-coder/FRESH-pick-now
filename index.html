@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Bulk Poster & File Sender</title>
+    <title>WhatsApp Bulk Poster Sender</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -30,8 +30,10 @@
             box-sizing: border-box;
             font-size: 14px;
         }
-        .file-box {
-            margin-top: 12px;
+        
+        /* File Upload Styling */
+        .file-upload-box {
+            margin-top: 15px;
             padding: 15px;
             background: #eef8f3;
             border: 2px dashed #25d366;
@@ -41,26 +43,17 @@
         input[type="file"] {
             margin-top: 10px;
             width: 100%;
-            font-size: 14px;
-        }
-        .preview-area {
-            margin-top: 10px;
+            font-size: 15px;
         }
         .poster-preview {
             max-width: 100%;
-            max-height: 220px;
+            max-height: 200px;
             border-radius: 6px;
             display: none;
-            margin: auto;
+            margin: 10px auto 0 auto;
             box-shadow: 0 2px 6px rgba(0,0,0,0.15);
         }
-        .file-info {
-            font-size: 13px;
-            color: #075e54;
-            font-weight: bold;
-            margin-top: 8px;
-            display: none;
-        }
+        
         .btn-sync {
             width: 100%;
             background-color: #007bff;
@@ -73,7 +66,6 @@
             margin-top: 15px;
             font-weight: bold;
         }
-        .btn-sync:hover { background-color: #0056b3; }
         
         .cards-container {
             margin-top: 15px;
@@ -101,19 +93,9 @@
             border-left-color: #888;
             background-color: #eef2f0;
         }
-        .store-info {
-            flex: 1;
-        }
-        .store-title {
-            font-size: 16px;
-            color: #075e54;
-            font-weight: bold;
-        }
-        .store-detail {
-            font-size: 13px;
-            color: #555;
-            margin-top: 3px;
-        }
+        .store-info { flex: 1; }
+        .store-title { font-size: 16px; color: #075e54; font-weight: bold; }
+        .store-detail { font-size: 13px; color: #555; margin-top: 3px; }
         .btn-wa-send {
             background-color: #25d366;
             color: white;
@@ -125,9 +107,7 @@
             font-weight: bold;
             white-space: nowrap;
         }
-        .btn-wa-send.sent-btn {
-            background-color: #6c757d;
-        }
+        .btn-wa-send.sent-btn { background-color: #6c757d; }
         .status-tracker { text-align: center; font-weight: bold; margin-top: 15px; color: #075e54; }
     </style>
 </head>
@@ -136,21 +116,16 @@
 <div class="container">
     <h2>WhatsApp Bulk Poster Sender</h2>
 
-    <!-- Google Sheet Sync Button -->
     <button class="btn-sync" onclick="fetchFromSheet()">Google Sheet-ൽ നിന്ന് ഡാറ്റ കൊണ്ടുവരിക</button>
 
-    <label for="message">സന്ദേശം / അടിക്കുറിപ്പ് (Caption):</label>
-    <textarea id="message" rows="3" placeholder="ഇവിടെ സന്ദേശം ടൈപ്പ് ചെയ്യുക..."></textarea>
+    <label for="message">സന്ദേശം (Message):</label>
+    <textarea id="message" rows="3" placeholder="സന്ദേശം ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
 
-    <!-- File / Poster Upload Box -->
-    <div class="file-box">
-        <label style="margin-top: 0; color: #075e54;">📁 കടക്കാർക്ക് അയക്കേണ്ട പോസ്റ്റർ / ഫയൽ സെലക്ട് ചെയ്യുക:</label>
-        <input type="file" id="fileInput" accept="image/*,application/pdf" onchange="handleFileSelect(event)">
-        
-        <div class="preview-area">
-            <img id="posterPreview" class="poster-preview" alt="Poster Preview">
-            <div id="fileInfo" class="file-info"></div>
-        </div>
+    <!-- ഫയൽ സെലക്ട് ചെയ്യാനുള്ള പ്രധാന ബോക്സ് -->
+    <div class="file-upload-box">
+        <label style="margin-top:0; color:#075e54; font-size: 16px;">📁 ഫോണിൽ നിന്ന് പോസ്റ്റർ സെലക്ട് ചെയ്യുക:</label>
+        <input type="file" id="fileInput" accept="image/*" onchange="previewFile(event)">
+        <img id="posterPreview" class="poster-preview" alt="Poster Preview">
     </div>
 
     <div id="statusTracker" class="status-tracker"></div>
@@ -165,24 +140,14 @@
     const CSV_URL = "https://docs.google.com/spreadsheets/d/1MZFEXa8rNwYPGA5ptfcKTEoHWCE-uVVpL0PvE2CpmMA/gviz/tq?tqx=out:csv";
     let fetchedStores = [];
 
-    function handleFileSelect(event) {
+    function previewFile(event) {
         const preview = document.getElementById('posterPreview');
-        const fileInfo = document.getElementById('fileInfo');
         const file = event.target.files[0];
-
         if (file) {
-            if (file.type.startsWith('image/')) {
-                preview.src = URL.createObjectURL(file);
-                preview.style.display = 'block';
-                fileInfo.style.display = 'none';
-            } else {
-                preview.style.display = 'none';
-                fileInfo.innerText = `📄 സെലക്ട് ചെയ്ത ഫയൽ: ${file.name}`;
-                fileInfo.style.display = 'block';
-            }
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
         } else {
             preview.style.display = 'none';
-            fileInfo.style.display = 'none';
         }
     }
 
@@ -263,7 +228,7 @@
         const fileInput = document.getElementById("fileInput");
 
         if (!messageText && (!fileInput.files || fileInput.files.length === 0)) {
-            alert("ദയവായി ഒരു പോസ്റ്റർ/ഫയൽ സെലക്ട് ചെയ്യുകയോ സന്ദേശം ടൈപ്പ് ചെയ്യുകയോ ചെയ്യുക!");
+            alert("ദയവായി ഒരു സന്ദേശം ടൈപ്പ് ചെയ്യുകയോ പോസ്റ്റർ സെലക്ട് ചെയ്യുകയോ ചെയ്യുക!");
             return;
         }
 
@@ -277,7 +242,6 @@
             btnElem.innerText = '✔ Sent';
         }
 
-        // Web Share API വഴി ഫയലും സന്ദേശവും ഒന്നിച്ച് ഷെയർ ചെയ്യാൻ ശ്രമിക്കുന്നു
         if (fileInput.files && fileInput.files.length > 0 && navigator.canShare && navigator.canShare({ files: fileInput.files })) {
             try {
                 await navigator.share({
@@ -286,11 +250,10 @@
                 });
                 return;
             } catch (err) {
-                console.log("Direct share cancelled or unsupported, opening WhatsApp chat directly.", err);
+                console.log("Direct share cancelled, opening WhatsApp link instead.");
             }
         }
 
-        // സാധാരണ രീതിയിൽ വാട്ട്‌സ്ആപ്പ് ഓപ്പൺ ചെയ്യുന്നു
         const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(messageText)}`;
         window.open(url, '_blank');
     }
