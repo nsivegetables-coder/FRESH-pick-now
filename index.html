@@ -30,6 +30,15 @@
             box-sizing: border-box;
             font-size: 14px;
         }
+        input[type="file"] {
+            margin-top: 5px;
+            width: 100%;
+            padding: 8px;
+            background: #f8f9fa;
+            border: 1px dashed #25d366;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
         .btn-sync {
             width: 100%;
             background-color: #007bff;
@@ -109,7 +118,10 @@
     <button class="btn-sync" onclick="fetchFromSheet()">Google Sheet-ൽ നിന്ന് ഡാറ്റ കൊണ്ടുവരിക</button>
 
     <label for="message">സന്ദേശം (Message):</label>
-    <textarea id="message" rows="4" placeholder="സന്ദേശം ടൈപ്പ് ചെയ്യുക..."></textarea>
+    <textarea id="message" rows="3" placeholder="സന്ദേശം ടൈപ്പ് ചെയ്യുക..."></textarea>
+
+    <label for="imageInput">📸 ഇമേജ് തിരഞ്ഞെടുക്കുക (Optional):</label>
+    <input type="file" id="imageInput" accept="image/*">
 
     <div id="statusTracker" class="status-tracker"></div>
 
@@ -195,10 +207,12 @@
         document.getElementById("statusTracker").innerText = `ആകെ ${fetchedStores.length} കടകൾ കാണിക്കുന്നു.`;
     }
 
-    function sendMessage(index, phone) {
+    async function sendMessage(index, phone) {
         const messageText = document.getElementById("message").value.trim();
-        if (!messageText) {
-            alert("ദയവായി അയക്കേണ്ട സന്ദേശം മുകളിലെ ബോക്സിൽ ടൈപ്പ് ചെയ്യുക!");
+        const imageInput = document.getElementById("imageInput");
+
+        if (!messageText && (!imageInput.files || imageInput.files.length === 0)) {
+            alert("ദയവായി സന്ദേശം ടൈപ്പ് ചെയ്യുകയോ ഒരു ഫോട്ടോ തിരഞ്ഞെടുക്കുകയോ ചെയ്യുക!");
             return;
         }
 
@@ -212,7 +226,20 @@
             btnElem.innerText = '✔ Sent';
         }
 
-        // വാട്ട്‌സ്ആപ്പ് ചാറ്റ് നേരിട്ട് തുറക്കുന്നു
+        // Web Share API വഴി ഫോട്ടോയും സന്ദേശവും ഒന്നിച്ച് ഷെയർ ചെയ്യാൻ ശ്രമിക്കുന്നു
+        if (imageInput.files && imageInput.files.length > 0 && navigator.canShare && navigator.canShare({ files: imageInput.files })) {
+            try {
+                await navigator.share({
+                    files: [imageInput.files[0]],
+                    text: messageText
+                });
+                return;
+            } catch (err) {
+                console.log("Direct share cancelled or failed, falling back to WhatsApp link.", err);
+            }
+        }
+
+        // സാധാരണ രീതിയിൽ വാട്ട്‌സ്ആപ്പ് ഓപ്പൺ ചെയ്യുന്നു
         const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(messageText)}`;
         window.open(url, '_blank');
     }
