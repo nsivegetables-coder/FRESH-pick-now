@@ -1,43 +1,39 @@
-
 <!DOCTYPE html>
 <html lang="ml">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bulk WhatsApp Messenger</title>
+    <title>WhatsApp Bulk Sender - Advanced</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
+            background-color: #f0f2f5;
             margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
+            padding: 15px;
         }
         .container {
-            background-color: #fff;
-            padding: 25px;
+            max-width: 650px;
+            margin: auto;
+            background: white;
+            padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            max-width: 500px;
-            width: 100%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        h2 {
-            text-align: center;
-            color: #075e54;
-        }
-        label {
-            font-weight: bold;
-            margin-top: 15px;
-            display: block;
-        }
-        textarea, input, select {
+        h2 { text-align: center; color: #075e54; margin-bottom: 20px; }
+        label { font-weight: bold; margin-top: 10px; display: block; }
+        textarea, select {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
+        }
+        .file-input-box {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
         }
         button {
             width: 100%;
@@ -48,20 +44,33 @@
             font-size: 16px;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 15px;
             font-weight: bold;
         }
-        button:hover {
-            background-color: #128c7e;
-        }
-        .status {
+        button:hover { background-color: #128c7e; }
+        .dashboard {
+            display: flex;
+            gap: 10px;
             margin-top: 20px;
-            padding: 10px;
+        }
+        .list-box {
+            flex: 1;
+            border: 1px solid #ddd;
             border-radius: 5px;
-            background-color: #e9f5ec;
-            color: #075e54;
-            display: none;
+            padding: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+        .list-box h3 { margin-top: 0; font-size: 16px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .item { font-size: 13px; margin-bottom: 8px; padding: 5px; background: #fff; border-radius: 3px; border-left: 3px solid #ccc; }
+        .item.sent { border-left-color: #25d366; }
+        .item.pending { border-left-color: #ff9800; }
+        .status-tracker {
             text-align: center;
+            font-weight: bold;
+            margin-top: 15px;
+            color: #075e54;
         }
     </style>
 </head>
@@ -70,69 +79,119 @@
 <div class="container">
     <h2>WhatsApp Bulk Sender</h2>
 
-    <label for="numbers">ഫോൺ നമ്പറുകൾ (Country code അടക്കം, ഉദാ: 919876543210):</label>
-    <textarea id="numbers" rows="5" placeholder="919876543210&#10;919876543211&#10;919876543212"></textarea>
+    <label for="dataInput">കടകളുടെ വിവരങ്ങൾ നൽകുക (ഫോർമാറ്റ്: കടയുടെ പേര്, സ്ഥലം, നമ്പർ):</label>
+    <textarea id="dataInput" rows="6" placeholder="ABC Store, Kozhikode, 919876543210&#10;XYZ Traders, Kochi, 919876543211"></textarea>
 
     <label for="message">സന്ദേശം (Message):</label>
-    <textarea id="message" rows="4" placeholder="നിങ്ങളുടെ സന്ദേശം ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
+    <textarea id="message" rows="3" placeholder="നിങ്ങളുടെ സന്ദേശം ഇവിടെ നൽകുക..."></textarea>
+
+    <label>ഫോട്ടോ / വീഡിയോ അയക്കാൻ (Optional):</label>
+    <div class="file-input-box">
+        <input type="file" id="mediaFile" accept="image/*,video/*">
+        <p style="font-size: 11px; color: #666; margin: 5px 0 0 0;">ശ്രദ്ധിക്കുക: ബ്രൗസർ വഴി വാട്ട്‌സ്ആപ്പിലേക്ക് ഫോട്ടോ നേരിട്ട് ഷെയർ ചെയ്യാനാകില്ല. ഈ ഫയൽ നിങ്ങൾ വാട്ട്‌സ്ആപ്പിൽ അറ്റാച്ച് ചെയ്യേണ്ടി വരും.</p>
+    </div>
 
     <label for="interval">ഇടവേള (Interval):</label>
     <select id="interval">
         <option value="60">1 മിനിറ്റ് (60 സെക്കൻഡ്)</option>
         <option value="30">30 സെക്കൻഡ്</option>
-        <option value="120">2 മിനിറ്റ് (120 സെക്കൻഡ്)</option>
+        <option value="120">2 മിനിറ്റ്</option>
     </select>
 
-    <button onclick="startSending()">Start Sending</button>
+    <button onclick="startProcess()">Start Sending</button>
 
-    <div id="status" class="status"></div>
+    <div id="statusTracker" class="status-tracker"></div>
+
+    <div class="dashboard">
+        <div class="list-box">
+            <h3>അയക്കാനുള്ളവ (<span id="pendingCount">0</span>)</h3>
+            <div id="pendingList"></div>
+        </div>
+        <div class="list-box">
+            <h3>അയച്ചവ (<span id="sentCount">0</span>)</h3>
+            <div id="sentList"></div>
+        </div>
+    </div>
 </div>
 
 <script>
+    let queue = [];
+    let sentItems = [];
     let timer = null;
 
-    function startSending() {
-        const numbersInput = document.getElementById("numbers").value.trim();
-        const message = encodeURIComponent(document.getElementById("message").value.trim());
+    function startProcess() {
+        const rawData = document.getElementById("dataInput").value.trim();
+        const baseMessage = document.getElementById("message").value.trim();
         const intervalSec = parseInt(document.getElementById("interval").value) * 1000;
-        const statusDiv = document.getElementById("status");
 
-        if (!numbersInput || !message) {
-            alert("ദയവായി നമ്പറുകളും സന്ദേശവും നൽകുക!");
+        if (!rawData || !baseMessage) {
+            alert("ദയവായി വിവിരങ്ങളും സന്ദേശവും നൽകുക!");
             return;
         }
 
-        // നമ്പറുകളെ വരി അല്ലെങ്കിൽ കോമ അനുസരിച്ച് വേർതിരിക്കുന്നു
-        let numbersList = numbersInput.split(/[\n,]+/).map(num => num.trim().replace(/[^0-9]/g, '')).filter(num => num.length > 5);
+        const lines = rawData.split('\n');
+        queue = [];
+        sentItems = [];
 
-        if (numbersList.length === 0) {
-            alert("സാധുവായ ഫോൺ നമ്പറുകൾ ഒന്നും ലഭിച്ചില്ല.");
-            return;
-        }
-
-        statusDiv.style.display = "block";
-        let currentIndex = 0;
-
-        function sendNext() {
-            if (currentIndex >= numbersList.length) {
-                statusDiv.innerText = "എല്ലാ സന്ദേശങ്ങളും അയച്ചു കഴിഞ്ഞു!";
-                clearInterval(timer);
-                return;
+        lines.forEach(line => {
+            const parts = line.split(',');
+            if (parts.length >= 3) {
+                const name = parts[0].trim();
+                const place = parts[1].trim();
+                const phone = parts[2].trim().replace(/[^0-9]/g, '');
+                
+                if (phone.length > 5) {
+                    queue.push({ name, place, phone });
+                }
             }
+        });
 
-            let phone = numbersList[currentIndex];
-            let url = `https://wa.me/${phone}?text=${message}`;
-
-            // പുതിയ ടാബിൽ WhatsApp തുറക്കുന്നു
-            window.open(url, '_blank');
-
-            currentIndex++;
-            statusDiv.innerText = `അയക്കുന്നു: ${currentIndex} / ${numbersList.length} (അടുത്തത് ${intervalSec/1000} സെക്കൻഡിനുള്ളിൽ...)`;
+        if (queue.length === 0) {
+            alert("നൽകിയ ഡാറ്റ ശരിയായ രൂപത്തിലല്ല! (ഉദാ: കടയുടെ പേര്, സ്ഥലം, 91XXXXXXXXXX)");
+            return;
         }
 
-        // ആദ്യ സന്ദേശം ഉടൻ അയക്കുന്നു, തുടർന്ന് സെറ്റ് ചെയ്ത സമയം അനുസരിച്ച്
-        sendNext();
-        timer = setInterval(sendNext, intervalSec);
+        updateDashboard();
+        
+        if (timer) clearInterval(timer);
+        sendNext(baseMessage, intervalSec);
+        timer = setInterval(() => sendNext(baseMessage, intervalSec), intervalSec);
+    }
+
+    function sendNext(baseMessage, intervalSec) {
+        if (queue.length === 0) {
+            document.getElementById("statusTracker").innerText = "എല്ലാ സന്ദേശങ്ങളും അയച്ചു കഴിഞ്ഞു!";
+            clearInterval(timer);
+            return;
+        }
+
+        const currentItem = queue.shift();
+        sentItems.push(currentItem);
+
+        // സന്ദേശത്തിൽ കടയുടെ പേരും സ്ഥലവും സ്വയം ചേരുന്നു
+        const customizedMsg = `ഹലോ ${currentItem.name} (${currentItem.place}),\n\n${baseMessage}`;
+        const url = `https://wa.me/${currentItem.phone}?text=${encodeURIComponent(customizedMsg)}`;
+
+        window.open(url, '_blank');
+
+        updateDashboard();
+        document.getElementById("statusTracker").innerText = `അടുത്ത സന്ദേശം ${intervalSec/1000} സെക്കൻഡിൽ അയക്കും...`;
+    }
+
+    function updateDashboard() {
+        const pendingContainer = document.getElementById("pendingList");
+        const sentContainer = document.getElementById("sentList");
+
+        document.getElementById("pendingCount").innerText = queue.length;
+        document.getElementById("sentCount").innerText = sentItems.length;
+
+        pendingContainer.innerHTML = queue.map(item => 
+            `<div class="item pending"><b>${item.name}</b> (${item.place})<br>${item.phone}</div>`
+        ).join('');
+
+        sentContainer.innerHTML = sentItems.map(item => 
+            `<div class="item sent"><b>${item.name}</b> (${item.place})<br>${item.phone}</div>`
+        ).join('');
     }
 </script>
 
