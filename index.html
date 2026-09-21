@@ -21,7 +21,7 @@
         }
         h2 { text-align: center; color: #075e54; margin-bottom: 20px; }
         label { font-weight: bold; margin-top: 15px; display: block; }
-        textarea, select {
+        textarea {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
@@ -29,9 +29,9 @@
             border-radius: 5px;
             box-sizing: border-box;
         }
-        button {
+        .btn-sync {
             width: 100%;
-            background-color: #25d366;
+            background-color: #007bff;
             color: white;
             border: none;
             padding: 12px;
@@ -41,45 +41,58 @@
             margin-top: 10px;
             font-weight: bold;
         }
-        .btn-sync { background-color: #007bff; margin-bottom: 15px; }
-        .btn-send-next {
-            background-color: #128c7e;
-            font-size: 18px;
-            padding: 15px;
-            margin-top: 15px;
-            display: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+        .btn-sync:hover { background-color: #0056b3; }
+        
         .cards-container {
-            margin-top: 10px;
-            max-height: 200px;
+            margin-top: 15px;
+            max-height: 400px;
             overflow-y: auto;
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
             padding: 10px;
-            border-radius: 5px;
-            background: #fdfdfd;
+            border-radius: 8px;
+            background: #fafafa;
         }
         .store-card {
             background: #ffffff;
             border: 1px solid #e0e0e0;
-            border-left: 5px solid #007bff;
-            padding: 10px;
-            margin-bottom: 8px;
-            border-radius: 5px;
+            border-left: 5px solid #25d366;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
-        .dashboard { display: flex; gap: 10px; margin-top: 20px; }
-        .list-box {
-            flex: 1;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            max-height: 180px;
-            overflow-y: auto;
-            background: #fafafa;
+        .store-card.sent {
+            border-left-color: #aaa;
+            background-color: #f0f0f0;
+            opacity: 0.8;
         }
-        .item { font-size: 12px; margin-bottom: 6px; padding: 5px; background: #fff; border-radius: 3px; border-left: 3px solid #ccc; }
-        .item.sent { border-left-color: #25d366; }
-        .item.pending { border-left-color: #ff9800; }
+        .store-title {
+            font-size: 16px;
+            color: #075e54;
+            font-weight: bold;
+        }
+        .store-detail {
+            font-size: 13px;
+            color: #555;
+        }
+        .btn-wa-card {
+            background-color: #25d366;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 5px;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+        .btn-wa-card:hover { background-color: #128c7e; }
         .status-tracker { text-align: center; font-weight: bold; margin-top: 15px; color: #075e54; }
     </style>
 </head>
@@ -90,39 +103,20 @@
 
     <button class="btn-sync" onclick="fetchFromSheet()">Google Sheet-ൽ നിന്ന് ഡാറ്റ കൊണ്ടുവരിക</button>
 
-    <label>കടകളുടെ വിവരങ്ങൾ:</label>
-    <div id="cardsContainer" class="cards-container">
-        <p style="text-align: center; color: #888; font-size: 13px;">ഡാറ്റ ലോഡ് ചെയ്യാൻ മുകളിലെ ബട്ടൺ അമർത്തുക...</p>
-    </div>
-
     <label for="message">സന്ദേശം (Message):</label>
-    <textarea id="message" rows="3" placeholder="അയക്കേണ്ട സന്ദേശം മാത്രം ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
-
-    <button id="startBtn" onclick="startProcess()">Start Bulk Sending</button>
-
-    <!-- Send Next Action Button -->
-    <button id="sendNextBtn" class="btn-send-next" onclick="sendToCurrent()"></button>
+    <textarea id="message" rows="3" placeholder="കടക്കാർക്ക് അയക്കേണ്ട മെസ്സേജ് ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
 
     <div id="statusTracker" class="status-tracker"></div>
 
-    <div class="dashboard">
-        <div class="list-box">
-            <h3>അയക്കാനുള്ളവ (<span id="pendingCount">0</span>)</h3>
-            <div id="pendingList"></div>
-        </div>
-        <div class="list-box">
-            <h3>അയച്ചവ (<span id="sentCount">0</span>)</h3>
-            <div id="sentList"></div>
-        </div>
+    <label>കടകളുടെ വിവരങ്ങൾ (സന്ദേശം അയക്കാൻ പച്ച ബട്ടണിൽ ക്ലിക്ക് ചെയ്യുക):</label>
+    <div id="cardsContainer" class="cards-container">
+        <p style="text-align: center; color: #888; font-size: 13px;">ഡാറ്റ ലോഡ് ചെയ്യാൻ മുകളിലെ ബട്ടൺ അമർത്തുക...</p>
     </div>
 </div>
 
 <script>
     const CSV_URL = "https://docs.google.com/spreadsheets/d/1MZFEXa8rNwYPGA5ptfcKTEoHWCE-uVVpL0PvE2CpmMA/gviz/tq?tqx=out:csv";
     let fetchedStores = [];
-    let queue = [];
-    let sentItems = [];
-    let currentStore = null;
 
     function fetchFromSheet() {
         document.getElementById("statusTracker").innerText = "Google Sheet-ൽ നിന്ന് ഡാറ്റ എടുക്കുന്നു...";
@@ -155,7 +149,7 @@
                 });
             }
 
-            if (name || phone) fetchedStores.push({ name, type, place, phone });
+            if (name || phone) fetchedStores.push({ id: i, name, type, place, phone, isSent: false });
         }
 
         renderCards();
@@ -164,96 +158,51 @@
     function renderCards() {
         const container = document.getElementById("cardsContainer");
         if (fetchedStores.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: red;">ഡാറ്റ ലഭിച്ചില്ല.</p>';
+            container.innerHTML = '<p style="text-align: center; color: red;">കടകളുടെ വിവരങ്ങൾ ഒന്നും ലഭിച്ചില്ല.</p>';
             return;
         }
 
-        container.innerHTML = fetchedStores.map(store => `
-            <div class="store-card">
-                <b>${store.name}</b> ${store.type ? '(' + store.type + ')' : ''}<br>
-                <small>📍 ${store.place || 'N/A'} | 📞 ${store.phone || 'No Number'}</small>
-            </div>
-        `).join('');
-
-        document.getElementById("statusTracker").innerText = `ആകെ ${fetchedStores.length} കടകളുടെ വിവരങ്ങൾ ലോഡ് ചെയ്തു!`;
-    }
-
-    function startProcess() {
-        const baseMessage = document.getElementById("message").value.trim();
-
-        if (fetchedStores.length === 0) {
-            alert("ആദ്യം Google Sheet-ൽ നിന്ന് ഡാറ്റ കൊണ്ടുവരിക!");
-            return;
-        }
-        if (!baseMessage) {
-            alert("ദയവായി അയക്കേണ്ട സന്ദേശം ടൈപ്പ് ചെയ്യുക!");
-            return;
-        }
-
-        queue = [];
-        sentItems = [];
-
-        fetchedStores.forEach(store => {
-            let cleanPhone = store.phone.replace(/[^0-9]/g, '');
-            if (cleanPhone.length >= 10) {
-                if (!cleanPhone.startsWith("91") && cleanPhone.length === 10) cleanPhone = "91" + cleanPhone;
-                queue.push({ name: store.name, place: store.place, phone: cleanPhone });
+        container.innerHTML = fetchedStores.map((store, index) => {
+            let cleanPhone = store.phone ? store.phone.replace(/[^0-9]/g, '') : '';
+            if (cleanPhone.length === 10 && !cleanPhone.startsWith('91')) {
+                cleanPhone = '91' + cleanPhone;
             }
-        });
 
-        if (queue.length === 0) {
-            alert("ഫോൺ നമ്പർ ഉള്ള കടകൾ ഒന്നും കണ്ടെത്തിയില്ല!");
+            return `
+                <div class="store-card ${store.isSent ? 'sent' : ''}" id="card-${index}">
+                    <div class="store-title">${store.name} ${store.type ? '<span style="font-size:12px; color:#666;">(' + store.type + ')</span>' : ''}</div>
+                    <div class="store-detail">📍 സ്ഥലം: ${store.place || 'നൽകിയിട്ടില്ല'}</div>
+                    <div class="store-detail">📞 ഫോൺ: ${cleanPhone ? cleanPhone : '<span style="color:red;">നമ്പർ ലഭ്യമല്ല</span>'}</div>
+                    ${cleanPhone ? 
+                        `<button class="btn-wa-card" onclick="sendMessage(${index}, '${cleanPhone}')">
+                            ${store.isSent ? '✔ Sent (വീണ്ടും അയക്കുക)' : '💬 Send WhatsApp'}
+                        </button>` : 
+                        `<button class="btn-wa-card" style="background:#ccc; cursor:not-allowed;" disabled>ഫോൺ നമ്പർ ഇല്ല</button>`
+                    }
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById("statusTracker").innerText = `ആകെ ${fetchedStores.length} കടകൾ ലോഡ് ചെയ്തു.`;
+    }
+
+    function sendMessage(index, phone) {
+        const messageText = document.getElementById("message").value.trim();
+        if (!messageText) {
+            alert("ദയവായി അയക്കേണ്ട സന്ദേശം മുകളിലെ ബോക്സിൽ ടൈപ്പ് ചെയ്യുക!");
             return;
         }
 
-        document.getElementById("startBtn").style.display = "none";
-        updateDashboard();
-        prepareNext();
-    }
-
-    function prepareNext() {
-        const sendNextBtn = document.getElementById("sendNextBtn");
-
-        if (queue.length === 0) {
-            sendNextBtn.style.display = "none";
-            document.getElementById("statusTracker").innerText = "🎉 എല്ലാ സന്ദേശങ്ങളും അയച്ചു കഴിഞ്ഞു!";
-            document.getElementById("startBtn").style.display = "block";
-            return;
+        fetchedStores[index].isSent = true;
+        
+        // Card color change to sent status
+        const cardElem = document.getElementById(`card-${index}`);
+        if (cardElem) {
+            cardElem.classList.add('sent');
         }
 
-        currentStore = queue.shift();
-        sendNextBtn.innerText = `📲 Send Message to: ${currentStore.name}`;
-        sendNextBtn.style.display = "block";
-        document.getElementById("statusTracker").innerText = `അടുത്തത്: ${currentStore.name}`;
-    }
-
-    function sendToCurrent() {
-        if (!currentStore) return;
-
-        const baseMessage = document.getElementById("message").value.trim();
-        const url = `whatsapp://send?phone=${currentStore.phone}&text=${encodeURIComponent(baseMessage)}`;
-
+        const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(messageText)}`;
         window.location.href = url;
-
-        sentItems.push(currentStore);
-        updateDashboard();
-
-        setTimeout(() => {
-            prepareNext();
-        }, 1000);
-    }
-
-    function updateDashboard() {
-        document.getElementById("pendingCount").innerText = queue.length;
-        document.getElementById("sentCount").innerText = sentItems.length;
-
-        document.getElementById("pendingList").innerHTML = queue.map(item => 
-            `<div class="item pending"><b>${item.name}</b><br>${item.phone}</div>`
-        ).join('');
-
-        document.getElementById("sentList").innerHTML = sentItems.map(item => 
-            `<div class="item sent"><b>${item.name}</b><br>${item.phone}</div>`
-        ).join('');
     }
 </script>
 
