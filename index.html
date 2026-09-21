@@ -109,7 +109,7 @@
     <button class="btn-sync" onclick="fetchFromSheet()">Google Sheet-ൽ നിന്ന് ഡാറ്റ കൊണ്ടുവരിക</button>
 
     <label for="message">സന്ദേശം (Message):</label>
-    <textarea id="message" rows="3" placeholder="കടക്കാർക്ക് അയക്കേണ്ട മെസ്സേജ് ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
+    <textarea id="message" rows="4" placeholder="സന്ദേശം ടൈപ്പ് ചെയ്യുക..."></textarea>
 
     <div id="statusTracker" class="status-tracker"></div>
 
@@ -183,7 +183,7 @@
                     <div>
                         ${cleanPhone ? 
                             `<button class="btn-wa-send ${store.isSent ? 'sent-btn' : ''}" id="btn-${index}" onclick="sendMessage(${index}, '${cleanPhone}')">
-                                ${store.isSent ? '✔ Sent' : '💬 Share'}
+                                ${store.isSent ? '✔ Sent' : '💬 Send'}
                             </button>` : 
                             `<button class="btn-wa-send" style="background:#ccc; cursor:not-allowed;" disabled>No Number</button>`
                         }
@@ -212,8 +212,9 @@
             btnElem.innerText = '✔ Sent';
         }
 
-        const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(messageText)}`;
-        window.location.href = url;
+        // വാട്ട്‌സ്ആപ്പ് ചാറ്റ് നേരിട്ട് തുറക്കുന്നു
+        const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(messageText)}`;
+        window.open(url, '_blank');
     }
 </script>
 
