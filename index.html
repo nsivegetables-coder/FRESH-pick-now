@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp Bulk Sender - NSI Vegetables</title>
+    <title>WhatsApp Bulk Sender - Tomato Delivery</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -160,14 +160,33 @@
             .then(res => res.json())
             .then(data => {
                 let formattedText = "";
-                data.forEach(row => {
-                    if (row.length >= 1) {
-                        let rowStr = row.join(", ").trim();
-                        if (rowStr.length > 3) {
-                            formattedText += rowStr + "\n";
-                        }
+                // Row 0 Header ആണ് (hotel name, please, etc.), അതിനാൽ i = 1 മുതൽ തുടങ്ങുന്നു
+                for (let i = 1; i < data.length; i++) {
+                    let row = data[i];
+                    if (!row || row.length === 0) continue;
+
+                    let name = row[0] ? String(row[0]).trim() : "";
+                    let type = row[1] ? String(row[1]).trim() : "";
+                    let place = row[2] ? String(row[2]).trim() : "";
+                    // Column E (Index 4) ആണ് phone number
+                    let phone = row[4] ? String(row[4]).trim() : "";
+
+                    // ഫോൺ നമ്പർ ഇല്ലെങ്കിൽ മറ്റ് സെല്ലുകളിൽ നമ്പർ ഉണ്ടോ എന്ന് ചെക്ക് ചെയ്യുന്നു
+                    if (!phone) {
+                        row.forEach(cell => {
+                            let cleanNum = String(cell).replace(/[^0-9]/g, '');
+                            if (cleanNum.length >= 10 && !phone) {
+                                phone = cleanNum;
+                            }
+                        });
                     }
-                });
+
+                    if (name || phone) {
+                        let combinedPlace = place ? (type ? type + ' - ' + place : place) : type;
+                        formattedText += `${name}, ${combinedPlace}, ${phone}\n`;
+                    }
+                }
+
                 document.getElementById("dataInput").value = formattedText;
                 document.getElementById("statusTracker").innerText = "ഡാറ്റ വിജയകരമായി ഡൗൺലോഡ് ചെയ്തു!";
             })
@@ -215,12 +234,15 @@
             });
 
             if (phone) {
+                if (!phone.startsWith("91") && phone.length === 10) {
+                    phone = "91" + phone;
+                }
                 queue.push({ name, place, phone });
             }
         });
 
         if (queue.length === 0) {
-            alert("നൽകിയ ഡാറ്റയിൽ സാധുവായ ഫോൺ നമ്പറുകൾ ഒന്നും കണ്ടെത്തിയില്ല!");
+            alert("ശ്രദ്ധിക്കുക: ഫോൺ നമ്പർ ഉള്ള എൻട്രികൾ ഒന്നും കണ്ടെത്തിയില്ല! (ഷീറ്റിൽ ബാക്കി ഫോൺ നമ്പറുകൾ കൂടി ചേർത്ത ശേഷം ശ്രമിക്കുക)");
             return;
         }
 
