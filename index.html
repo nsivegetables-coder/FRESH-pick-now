@@ -28,6 +28,7 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
+            font-size: 14px;
         }
         .btn-sync {
             width: 100%;
@@ -45,7 +46,7 @@
         
         .cards-container {
             margin-top: 15px;
-            max-height: 400px;
+            max-height: 450px;
             overflow-y: auto;
             border: 1px solid #ddd;
             padding: 10px;
@@ -57,42 +58,45 @@
             border: 1px solid #e0e0e0;
             border-left: 5px solid #25d366;
             padding: 12px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             border-radius: 6px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             display: flex;
-            flex-direction: column;
-            gap: 5px;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
         }
         .store-card.sent {
-            border-left-color: #aaa;
-            background-color: #f0f0f0;
-            opacity: 0.8;
+            border-left-color: #888;
+            background-color: #eef2f0;
+        }
+        .store-info {
+            flex: 1;
         }
         .store-title {
-            font-size: 16px;
+            font-size: 15px;
             color: #075e54;
             font-weight: bold;
         }
         .store-detail {
-            font-size: 13px;
+            font-size: 12px;
             color: #555;
+            margin-top: 3px;
         }
-        .btn-wa-card {
+        .btn-wa-send {
             background-color: #25d366;
             color: white;
             border: none;
-            padding: 10px;
-            font-size: 14px;
+            padding: 10px 14px;
+            font-size: 13px;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            margin-top: 5px;
-            text-align: center;
-            text-decoration: none;
-            display: block;
+            white-space: nowrap;
         }
-        .btn-wa-card:hover { background-color: #128c7e; }
+        .btn-wa-send.sent-btn {
+            background-color: #6c757d;
+        }
         .status-tracker { text-align: center; font-weight: bold; margin-top: 15px; color: #075e54; }
     </style>
 </head>
@@ -104,11 +108,11 @@
     <button class="btn-sync" onclick="fetchFromSheet()">Google Sheet-ൽ നിന്ന് ഡാറ്റ കൊണ്ടുവരിക</button>
 
     <label for="message">സന്ദേശം (Message):</label>
-    <textarea id="message" rows="3" placeholder="കടക്കാർക്ക് അയക്കേണ്ട മെസ്സേജ് ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
+    <textarea id="message" rows="3" placeholder="അയക്കേണ്ട സന്ദേശം ഇവിടെ ടൈപ്പ് ചെയ്യുക..."></textarea>
 
     <div id="statusTracker" class="status-tracker"></div>
 
-    <label>കടകളുടെ വിവരങ്ങൾ (സന്ദേശം അയക്കാൻ പച്ച ബട്ടണിൽ ക്ലിക്ക് ചെയ്യുക):</label>
+    <label>കടകളുടെ ലിസ്റ്റ്:</label>
     <div id="cardsContainer" class="cards-container">
         <p style="text-align: center; color: #888; font-size: 13px;">ഡാറ്റ ലോഡ് ചെയ്യാൻ മുകളിലെ ബട്ടൺ അമർത്തുക...</p>
     </div>
@@ -170,15 +174,19 @@
 
             return `
                 <div class="store-card ${store.isSent ? 'sent' : ''}" id="card-${index}">
-                    <div class="store-title">${store.name} ${store.type ? '<span style="font-size:12px; color:#666;">(' + store.type + ')</span>' : ''}</div>
-                    <div class="store-detail">📍 സ്ഥലം: ${store.place || 'നൽകിയിട്ടില്ല'}</div>
-                    <div class="store-detail">📞 ഫോൺ: ${cleanPhone ? cleanPhone : '<span style="color:red;">നമ്പർ ലഭ്യമല്ല</span>'}</div>
-                    ${cleanPhone ? 
-                        `<button class="btn-wa-card" onclick="sendMessage(${index}, '${cleanPhone}')">
-                            ${store.isSent ? '✔ Sent (വീണ്ടും അയക്കുക)' : '💬 Send WhatsApp'}
-                        </button>` : 
-                        `<button class="btn-wa-card" style="background:#ccc; cursor:not-allowed;" disabled>ഫോൺ നമ്പർ ഇല്ല</button>`
-                    }
+                    <div class="store-info">
+                        <div class="store-title">${store.name} ${store.type ? '<span style="font-size:11px; color:#666;">(' + store.type + ')</span>' : ''}</div>
+                        <div class="store-detail">📍 ${store.place || 'സ്ഥലം നൽകിയിട്ടില്ല'}</div>
+                        <div class="store-detail">📞 ${cleanPhone ? cleanPhone : '<span style="color:red;">ഫോൺ നമ്പർ ഇല്ല</span>'}</div>
+                    </div>
+                    <div>
+                        ${cleanPhone ? 
+                            `<button class="btn-wa-send ${store.isSent ? 'sent-btn' : ''}" id="btn-${index}" onclick="sendMessage(${index}, '${cleanPhone}')">
+                                ${store.isSent ? '✔ Sent' : '💬 Send'}
+                            </button>` : 
+                            `<button class="btn-wa-send" style="background:#ccc; cursor:not-allowed;" disabled>No Number</button>`
+                        }
+                    </div>
                 </div>
             `;
         }).join('');
@@ -195,10 +203,12 @@
 
         fetchedStores[index].isSent = true;
         
-        // Card color change to sent status
         const cardElem = document.getElementById(`card-${index}`);
-        if (cardElem) {
-            cardElem.classList.add('sent');
+        const btnElem = document.getElementById(`btn-${index}`);
+        if (cardElem) cardElem.classList.add('sent');
+        if (btnElem) {
+            btnElem.classList.add('sent-btn');
+            btnElem.innerText = '✔ Sent';
         }
 
         const url = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(messageText)}`;
