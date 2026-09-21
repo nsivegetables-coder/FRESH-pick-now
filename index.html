@@ -151,50 +151,95 @@
 </div>
 
 <script>
-    const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbzuZInAVz_ojoNkuhJyq1bsn32jRX6iCCS9Fl_JKgIWEklWhjIN0dDvdEyWHykdcG/exec";
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/1MZFEXa8rNwYPGA5ptfcKTEoHWCE-uVVpL0PvE2CpmMA/gviz/tq?tqx=out:csv";
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzuZInAVz_ojoNkuhJyq1bsn32jRX6iCCS9Fl_JKgIWEklWhjIN0dDvdEyWHykdcG/exec";
 
     function fetchFromSheet() {
         document.getElementById("statusTracker").innerText = "Google Sheet-ൽ നിന്ന് ഡാറ്റ എടുക്കുന്നു...";
 
-        fetch(SHEET_API_URL)
-            .then(res => res.json())
-            .then(data => {
-                let formattedText = "";
-                // Row 0 Header ആണ് (hotel name, please, etc.), അതിനാൽ i = 1 മുതൽ തുടങ്ങുന്നു
-                for (let i = 1; i < data.length; i++) {
-                    let row = data[i];
-                    if (!row || row.length === 0) continue;
-
-                    let name = row[0] ? String(row[0]).trim() : "";
-                    let type = row[1] ? String(row[1]).trim() : "";
-                    let place = row[2] ? String(row[2]).trim() : "";
-                    // Column E (Index 4) ആണ് phone number
-                    let phone = row[4] ? String(row[4]).trim() : "";
-
-                    // ഫോൺ നമ്പർ ഇല്ലെങ്കിൽ മറ്റ് സെല്ലുകളിൽ നമ്പർ ഉണ്ടോ എന്ന് ചെക്ക് ചെയ്യുന്നു
-                    if (!phone) {
-                        row.forEach(cell => {
-                            let cleanNum = String(cell).replace(/[^0-9]/g, '');
-                            if (cleanNum.length >= 10 && !phone) {
-                                phone = cleanNum;
-                            }
-                        });
-                    }
-
-                    if (name || phone) {
-                        let combinedPlace = place ? (type ? type + ' - ' + place : place) : type;
-                        formattedText += `${name}, ${combinedPlace}, ${phone}\n`;
-                    }
-                }
-
-                document.getElementById("dataInput").value = formattedText;
-                document.getElementById("statusTracker").innerText = "ഡാറ്റ വിജയകരമായി ഡൗൺലോഡ് ചെയ്തു!";
+        // Direct CSV Fetch വഴി ആദ്യം ശ്രമിക്കുന്നു
+        fetch(CSV_URL)
+            .then(res => {
+                if (!res.ok) throw new Error("CSV Fetch failed");
+                return res.text();
+            })
+            .then(csvText => {
+                parseCSVAndFill(csvText);
             })
             .catch(err => {
-                console.error(err);
-                alert("ഡാറ്റ ലോഡ് ചെയ്യുന്നതിൽ പിശക് സംഭവിച്ചു.");
-                document.getElementById("statusTracker").innerText = "";
+                console.log("CSV Direct fetch failed, trying Apps Script API...", err);
+                // പരാജയപ്പെട്ടാൽ Apps Script API വഴി ശ്രമിക്കുന്നു
+                fetch(APPS_SCRIPT_URL)
+                    .then(res => res.json())
+                    .then(data => parseJSONAndFill(data))
+                    .catch(e => {
+                        console.error(e);
+                        alert("ഡാറ്റ ലോഡ് ചെയ്യുന്നതിൽ പിശക് സംഭവിച്ചു! Google Sheet Share settings 'Anyone with link' എന്ന് മാറ്റിയിട്ടുണ്ടെന്ന് ഉറപ്പുവരുത്തുക.");
+                        document.getElementById("statusTracker").innerText = "";
+                    });
             });
+    }
+
+    function parseCSVAndFill(csvText) {
+        let lines = csvText.split('\n');
+        let formattedText = "";
+
+        for (let i = 1; i < lines.length; i++) {
+            let row = lines[i].split(',').map(cell => cell.replace(/^"|"$/g, '').trim());
+            if (row.length < 1 || !row.join('')) continue;
+
+            let name = row[0] || "";
+            let type = row[1] || "";
+            let place = row[2] || "";
+            let phone = row[4] || "";
+
+            if (!phone) {
+                row.forEach(cell => {
+                    let cleanNum = cell.replace(/[^0-9]/g, '');
+                    if (cleanNum.length >= 10 && !phone) {
+                        phone = cleanNum;
+                    }
+                });
+            }
+
+            if (name || phone) {
+                let combinedPlace = place ? (type ? type + ' - ' + place : place) : type;
+                formattedText += `${name}, ${combinedPlace}, ${phone}\n`;
+            }
+        }
+
+        document.getElementById("dataInput").value = formattedText;
+        document.getElementById("statusTracker").innerText = "ഡാറ്റ വിജയകരമായി ഡൗൺലോഡ് ചെയ്തു!";
+    }
+
+    function parseJSONAndFill(data) {
+        let formattedText = "";
+        for (let i = 1; i < data.length; i++) {
+            let row = data[i];
+            if (!row || row.length === 0) continue;
+
+            let name = row[0] ? String(row[0]).trim() : "";
+            let type = row[1] ? String(row[1]).trim() : "";
+            let place = row[2] ? String(row[2]).trim() : "";
+            let phone = row[4] ? String(row[4]).trim() : "";
+
+            if (!phone) {
+                row.forEach(cell => {
+                    let cleanNum = String(cell).replace(/[^0-9]/g, '');
+                    if (cleanNum.length >= 10 && !phone) {
+                        phone = cleanNum;
+                    }
+                });
+            }
+
+            if (name || phone) {
+                let combinedPlace = place ? (type ? type + ' - ' + place : place) : type;
+                formattedText += `${name}, ${combinedPlace}, ${phone}\n`;
+            }
+        }
+
+        document.getElementById("dataInput").value = formattedText;
+        document.getElementById("statusTracker").innerText = "ഡാറ്റ വിജയകരമായി ഡൗൺലോഡ് ചെയ്തു!";
     }
 
     let queue = [];
@@ -242,7 +287,7 @@
         });
 
         if (queue.length === 0) {
-            alert("ശ്രദ്ധിക്കുക: ഫോൺ നമ്പർ ഉള്ള എൻട്രികൾ ഒന്നും കണ്ടെത്തിയില്ല! (ഷീറ്റിൽ ബാക്കി ഫോൺ നമ്പറുകൾ കൂടി ചേർത്ത ശേഷം ശ്രമിക്കുക)");
+            alert("ശ്രദ്ധിക്കുക: ഫോൺ നമ്പർ ഉള്ള എൻട്രികൾ ഒന്നും കണ്ടെത്തിയില്ല!");
             return;
         }
 
