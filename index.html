@@ -339,8 +339,8 @@
         const currentItem = queue.shift();
         sentItems.push(currentItem);
 
-        // കൃത്യമായി നിങ്ങൾ ടൈപ്പ് ചെയ്യുന്ന മെസ്സേജ് മാത്രം അയക്കുന്നു
-        const url = `https://wa.me/${currentItem.phone}?text=${encodeURIComponent(baseMessage)}`;
+        // നേരിട്ട് വാട്ട്‌സ്ആപ്പ് ആപ്പ് ഓപ്പൺ ചെയ്യാനുള്ള ലിങ്ക്
+        const url = `whatsapp://send?phone=${currentItem.phone}&text=${encodeURIComponent(baseMessage)}`;
 
         window.open(url, '_blank');
 
